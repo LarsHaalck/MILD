@@ -1,5 +1,5 @@
 ﻿#include <iostream>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -262,14 +262,7 @@ void test_mild(string folder,
 
 int main(int argc, char *argv[])
 {
-    cv::FileStorage fSettings;
-    string data_folder;
-    if (argc == 3)
-    {
-        data_folder = argv[1];
-        fSettings = cv::FileStorage(argv[2], cv::FileStorage::READ);
-    }
-    else
+    if (argc != 3)
     {
         cout << "please check your input!" << endl;
         cout << "standard input: ./mild imageList.txt configure.yaml" << endl;
@@ -277,6 +270,8 @@ int main(int argc, char *argv[])
         cout << "settings.yaml: indicats the parameters used in loop closure detection" << endl;
         return 0;
     }
+    cv::FileStorage fSettings = cv::FileStorage(argv[2], cv::FileStorage::READ);
+    string data_folder = argv[1];
 
     float probability_threshold = fSettings["probability_threshold"];
     int non_loop_closure_threshold = fSettings["non_loop_closure_threshold"];
