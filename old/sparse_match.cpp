@@ -54,7 +54,7 @@ SparseMatcher::SparseMatcher(int feature_type, int input_hash_table_num,
     }
     descriptor_type = feature_type;
     depth_level = input_depth_level;
-    bits_per_substring = (int)(descriptor_length / input_hash_table_num);
+    bits_per_substring = static_cast<int>(descriptor_length / input_hash_table_num);
     if (bits_per_substring > sizeof(size_t) * 8)
     {
         cout << "substring too large !, invalied" << endl;
@@ -67,7 +67,7 @@ SparseMatcher::SparseMatcher(int feature_type, int input_hash_table_num,
 
     features_buffer
         = std::vector<sparse_match_entry>(entry_num_per_hash_table * hash_table_num);
-    for (int i = 0; i < entry_num_per_hash_table * hash_table_num; i++)
+    for (int i = 0; i < static_cast<int>(entry_num_per_hash_table * hash_table_num); i++)
     {
         features_buffer[i].clear();
     }
@@ -109,7 +109,7 @@ void SparseMatcher::BFMatch(cv::Mat d2, cv::Mat d1, std::vector<cv::DMatch>& mat
     cout << "f1 " << feature_f1_num << endl << "f2 " << feature_f2_num << endl;
     unsigned short* delta_distribution
         = new unsigned short[feature_f1_num * feature_f2_num];
-    uint64_t current_descriptor[4];
+    /* uint64_t current_descriptor[4]; */
     for (int f1 = 0; f1 < feature_f1_num; f1++)
     {
         uint64_t* feature1_ptr = (d1.ptr<uint64_t>(f1));
@@ -145,12 +145,12 @@ void SparseMatcher::BFMatch(cv::Mat d2, cv::Mat d1, std::vector<cv::DMatch>& mat
 
 void SparseMatcher::train(cv::Mat desc)
 {
-    features_descriptor = (uint64_t*)desc.data;
+    features_descriptor = reinterpret_cast<uint64_t*>(desc.data);
     int feature_num = desc.rows;
     if (descriptor_type == FEATURE_TYPE_ORB)
     {
-        int descriptor_length = desc.cols * 8;
-        if (descriptor_length != descriptor_length)
+        unsigned int local_descriptor_length = desc.cols * 8;
+        if (descriptor_length != local_descriptor_length)
         {
             cout << "error ! feature descriptor length doesn't match" << endl;
         }
@@ -161,7 +161,7 @@ void SparseMatcher::train(cv::Mat desc)
     {
         unsigned int* data = desc.ptr<unsigned int>(feature_idx);
         multi_index_hashing(hash_entry_index, data, hash_table_num, bits_per_substring);
-        for (int hash_table_id = 0; hash_table_id < hash_table_num; hash_table_id++)
+        for (int hash_table_id = 0; hash_table_id < static_cast<int>(hash_table_num); hash_table_id++)
         {
             int entry_pos = hash_table_id * entry_num_per_hash_table
                 + hash_entry_index[hash_table_id];
@@ -170,10 +170,11 @@ void SparseMatcher::train(cv::Mat desc)
     }
 }
 
-void SparseMatcher::search_entry(uint64_t* f1, unsigned long search_entry_idx,
-    unsigned short& min_distance, unsigned short& corr)
-{
-}
+/* void SparseMatcher::search_entry(uint64_t* f1, unsigned long search_entry_idx, */
+/*     unsigned short& min_distance, unsigned short& corr) */
+/* { */
+
+/* } */
 // d1: input feature
 // d2: output feature
 void SparseMatcher::search(cv::Mat desc, std::vector<cv::DMatch>& matches)
@@ -190,7 +191,7 @@ void SparseMatcher::search(cv::Mat desc, std::vector<cv::DMatch>& matches)
         unsigned short best_corr_fid = 0;
         uint64_t* f1 = desc.ptr<uint64_t>(feature_idx);
         multi_index_hashing(hash_entry_index, data, hash_table_num, bits_per_substring);
-        for (int hash_table_id = 0; hash_table_id < hash_table_num; hash_table_id++)
+        for (int hash_table_id = 0; hash_table_id < static_cast<int>(hash_table_num); hash_table_id++)
         {
             unsigned long entry_idx = hash_table_id * entry_num_per_hash_table
                 + hash_entry_index[hash_table_id];
@@ -213,7 +214,7 @@ void SparseMatcher::search(cv::Mat desc, std::vector<cv::DMatch>& matches)
                 std::vector<unsigned long> neighbor_entry_idx;
                 generate_neighbor_candidates(
                     depth_level, entry_idx, neighbor_entry_idx, bits_per_substring);
-                for (int iter = 0; iter < neighbor_entry_idx.size(); iter++)
+                for (int iter = 0; iter < static_cast<int>(neighbor_entry_idx.size()); iter++)
                 {
                     search_entry(
                         f1, neighbor_entry_idx[iter], min_distance, best_corr_fid);
@@ -230,20 +231,20 @@ void SparseMatcher::search(cv::Mat desc, std::vector<cv::DMatch>& matches)
 }
 void SparseMatcher::train_8(cv::Mat desc)
 {
-    features_descriptor = (uint64_t*)desc.data;
+    features_descriptor = reinterpret_cast<uint64_t*>(desc.data);
     int feature_num = desc.rows;
     if (descriptor_type == FEATURE_TYPE_ORB)
     {
-        int descriptor_length = desc.cols * 8;
-        if (descriptor_length != descriptor_length)
+        unsigned int local_descriptor_length = desc.cols * 8;
+        if (descriptor_length != local_descriptor_length)
         {
             cout << "error ! feature descriptor length doesn't match" << endl;
         }
     }
     for (unsigned short feature_idx = 0; feature_idx < feature_num; feature_idx++)
     {
-        unsigned char* data = (unsigned char*)features_descriptor + 32 * feature_idx;
-        for (int hash_table_id = 0; hash_table_id < hash_table_num; hash_table_id++)
+        unsigned char* data = reinterpret_cast<unsigned char*>(features_descriptor) + 32 * feature_idx;
+        for (int hash_table_id = 0; hash_table_id < static_cast<int>(hash_table_num); hash_table_id++)
         {
             int entry_pos
                 = hash_table_id * entry_num_per_hash_table + data[hash_table_id];
@@ -259,11 +260,11 @@ void SparseMatcher::search_8(cv::Mat desc, std::vector<cv::DMatch>& matches)
     matches.reserve(feature_num);
     for (unsigned short feature_idx = 0; feature_idx < feature_num; feature_idx++)
     {
-        unsigned char* data = (unsigned char*)desc.data + feature_idx * 32;
-        uint64_t* f1 = (uint64_t*)desc.data + feature_idx * 4;
+        unsigned char* data = static_cast<unsigned char*>(desc.data) + feature_idx * 32;
+        uint64_t* f1 = reinterpret_cast<uint64_t*>(desc.data) + feature_idx * 4;
         unsigned short min_distance = 256;
         unsigned short best_corr_fid = 0;
-        for (int hash_table_id = 0; hash_table_id < hash_table_num; hash_table_id++)
+        for (int hash_table_id = 0; hash_table_id < static_cast<int>(hash_table_num); hash_table_id++)
         {
             unsigned long entry_idx
                 = hash_table_id * entry_num_per_hash_table + data[hash_table_id];
@@ -293,16 +294,16 @@ void SparseMatcher::search_8_with_range(cv::Mat desc, std::vector<cv::DMatch>& m
     float range)
 {
     int feature_num = desc.rows;
-    float distance_threshold = range * range;
+    float local_distance_threshold = range * range;
     matches.clear();
     for (unsigned short feature_idx = 0; feature_idx < feature_num; feature_idx++)
     {
-        unsigned char* data = (unsigned char*)desc.data + feature_idx * 32;
-        uint64_t* f1 = (uint64_t*)desc.data + feature_idx * 4;
+        unsigned char* data = static_cast<unsigned char*>(desc.data) + feature_idx * 32;
+        uint64_t* f1 = reinterpret_cast<uint64_t*>(desc.data) + feature_idx * 4;
         Point2f query_feature = query_features[feature_idx].pt;
         unsigned short min_distance = 256;
         unsigned short best_corr_fid = 0;
-        for (int hash_table_id = 0; hash_table_id < hash_table_num; hash_table_id++)
+        for (int hash_table_id = 0; hash_table_id < static_cast<int>(hash_table_num); hash_table_id++)
         {
             unsigned long entry_idx
                 = hash_table_id * entry_num_per_hash_table + data[hash_table_id];
@@ -316,7 +317,7 @@ void SparseMatcher::search_8_with_range(cv::Mat desc, std::vector<cv::DMatch>& m
                             * (train_feature.x - query_feature.x)
                         + (train_feature.y - query_feature.y)
                             * (train_feature.y - query_feature.y)
-                    < distance_threshold)
+                    < local_distance_threshold)
                 {
                     int hamming_distance = calculate_hamming_distance_256bit(f1, f2);
                     if (hamming_distance < min_distance)
@@ -327,7 +328,7 @@ void SparseMatcher::search_8_with_range(cv::Mat desc, std::vector<cv::DMatch>& m
                 }
             }
         }
-        if (min_distance <= distance_threshold)
+        if (min_distance <= local_distance_threshold)
         {
             DMatch m;
             m.queryIdx = feature_idx;

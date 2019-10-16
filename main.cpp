@@ -14,6 +14,7 @@
 #include "MILD/loop_closure_detector.h"
 #include "frame.h"
 #include "global.h"
+
 using namespace std;
 using namespace cv;
 
@@ -36,7 +37,7 @@ bool DirectoryExists(const char* pzPath)
     return bExists;
 }
 
-void LoadRGBFrame(string fileName, int index, Frame& t, string tag)
+void LoadRGBFrame(string fileName, int index, Frame& t)
 {
     t.frame_index = index;
     t.keypoints.clear();
@@ -51,7 +52,7 @@ void LoadRGBFrame(string fileName, int index, Frame& t, string tag)
     }
 }
 
-void extractFeatures(Frame& t, string tag, int maximum_feature_num)
+void extractFeatures(Frame& t, int maximum_feature_num)
 {
     Ptr<ORB> orb = ORB::create();
     orb->setMaxFeatures(maximum_feature_num);
@@ -118,7 +119,7 @@ void test_mild(string folder, int maximum_feature_num = 800,
     while (fin.getline(line, sizeof(line), '\n'))
     {
         string input = line;
-        input = input.erase(input.find_last_not_of(" "));
+        /* input = input.erase(input.find_last_not_of(" ")); */
         memset(line, '\0', sizeof(line));
         fileName.push_back(input);
     }
@@ -130,20 +131,20 @@ void test_mild(string folder, int maximum_feature_num = 800,
         {
             cout << "loading " << fileName[i] << endl;
         }
-        LoadRGBFrame(fileName[i], i + 1, curFrame, tag);
+        LoadRGBFrame(fileName[i], i + 1, curFrame);
         frame_list.push_back(curFrame);
     }
     start = clock();
-    for (int i = 0; i < frame_list.size(); i++)
+    for (int i = 0; i < static_cast<int>(frame_list.size()); i++)
     {
         if (i % 100 == 0)
         {
             cout << "extracting features: " << i << endl;
         }
-        extractFeatures(frame_list[i], tag, maximum_feature_num);
+        extractFeatures(frame_list[i], maximum_feature_num);
     }
     end = clock();
-    double duration_loadFrame = (double)(end - start) / CLOCKS_PER_SEC;
+    double duration_loadFrame = static_cast<double>(end - start) / CLOCKS_PER_SEC;
     cout << "feature extraction per frame : "
          << duration_loadFrame / frame_list.size() * 1000.0f << "ms" << endl;
     float* p_shared_score = new float[runFrameNum * runFrameNum];
@@ -169,7 +170,9 @@ void test_mild(string folder, int maximum_feature_num = 800,
         min_shared_score_threshold, min_distance);
 
     clock_t start_lcd, end_lcd;
-    for (int k = 0; k < frame_list.size(); k++)
+    ofstream file;
+    file.open("test123.csv");
+    for (int k = 0; k < static_cast<int>(frame_list.size()); k++)
     {
         if (k % 100 == 0)
         {
@@ -180,16 +183,22 @@ void test_mild(string folder, int maximum_feature_num = 800,
         similarity_score.clear();
         lcd.insert_and_query_database(frame_list[k].descriptor, similarity_score);
 
+
         spatial_filter.filter(
             similarity_score, previous_visit_probability, privious_visit_flag);
-        for (int i = 0; i < similarity_score.size(); i++)
+        for (int i = 0; i < static_cast<int>(similarity_score.size()); i++)
         {
             p_shared_score[i + k * runFrameNum] = similarity_score[i];
         }
+
+
         for (int i = 0; i < previous_visit_probability.size(); i++)
         {
             p_visit_probability[i + k * runFrameNum] = previous_visit_probability[i];
         }
+
+        for (int i = 0; i < previous_visit_probability.size(); i++)
+            file << i << "," << k << "," << previous_visit_probability[i] << "\n";
 #if 0
         if (privious_visit_flag.size() >= 4)
         {
@@ -209,9 +218,10 @@ void test_mild(string folder, int maximum_feature_num = 800,
             }
         }
         end_lcd = clock();
-        double time_lcd_per_iteration = (double)(end_lcd - start_lcd) / CLOCKS_PER_SEC;
+        double time_lcd_per_iteration = static_cast<double>(end_lcd - start_lcd) / CLOCKS_PER_SEC;
         time_cost_per_frame[k] = time_lcd_per_iteration;
     }
+    file.close();
 
     if (privious_visit_flag.size() >= 4)
     {
@@ -227,19 +237,19 @@ void test_mild(string folder, int maximum_feature_num = 800,
         }
     }
     end = clock();
-    double duration_lcd = (double)(end - start) / CLOCKS_PER_SEC;
+    double duration_lcd = static_cast<double>(end - start) / CLOCKS_PER_SEC;
     cout << "loop closure detection time per frame: "
          << duration_lcd / frame_list.size() * 1000.0f << "ms" << endl;
     float frame_num = lcd.features_descriptor.size();
     float average_feature_per_frame = lcd.count_feature_in_database() / frame_num;
     cout << "hamming distance calculation per feature : "
-         << (float)(lcd.statistics_num_distance_calculation) / frame_num
+         << static_cast<float>(lcd.statistics_num_distance_calculation) / frame_num
             / average_feature_per_frame
          << endl;
     cout << "feature count : " << average_feature_per_frame << "features,	"
          << frame_num << "frames" << endl;
     int* frame_feature_num = new int[frame_list.size()];
-    for (int i = 0; i < frame_list.size(); i++)
+    for (int i = 0; i < static_cast<int>(frame_list.size()); i++)
     {
         frame_feature_num[i] = frame_list[i].keypoints.size();
     }

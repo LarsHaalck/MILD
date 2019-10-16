@@ -42,7 +42,7 @@ public:
         int input_max_num_per_entry = DEFAULT_MAX_UNIT_NUM_PER_ENTRY);
     ~LoopClosureDetector();
     void displayParameters();
-    int construct_database(cv::Mat descriptor); // return the index of image
+    /* int construct_database(cv::Mat descriptor); // return the index of image */
     int query_database(cv::Mat descriptor, std::vector<float>& score);
     int insert_and_query_database(cv::Mat descriptor, std::vector<float>& score);
     int calculate_hamming_distance_256bit(uint64_t* f1, uint64_t* f2);

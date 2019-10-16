@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include "lightweight_vector.hpp"
+#include <vector>
 
 typedef int64_t __int64;
 namespace MILD
@@ -40,7 +41,7 @@ inline void multi_index_hashing(std::vector<unsigned long>& entry_idx, unsigned 
     if (bits_per_substring == 16)
     {
 
-        unsigned short* entry_value = (unsigned short*)desc;
+        unsigned short* entry_value = reinterpret_cast<unsigned short*>(desc);
         for (int i = 0; i < hash_table_num; i++)
         {
             entry_idx[i] = entry_value[i];
@@ -93,7 +94,7 @@ inline void generate_neighbor_candidates(int my_depth_level, unsigned long entry
     {
         unsigned long nidx = entry_idx ^ (1 << i);
         int redundancy_flag = 0;
-        for (int j = 0; j < neighbor_entry_idx.size(); j++)
+        for (int j = 0; j < static_cast<int>(neighbor_entry_idx.size()); j++)
         {
             if (nidx == neighbor_entry_idx[j])
             {

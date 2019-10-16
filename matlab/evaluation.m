@@ -49,4 +49,4 @@ if(1)
     figure;imagesc(input_flag);title('input flag');
 
 end
-endfunction
+end

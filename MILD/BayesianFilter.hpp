@@ -104,7 +104,7 @@ public:
         std::vector<Eigen::VectorXf>& privious_visit_flag)
     {
 
-        float trans_model[2][2] = {0.95, 0.05, 0.05, 0.95};
+        float trans_model[2][2] = {{0.95, 0.05}, {0.05, 0.95}};
         // bayesian filter
         int dataset_size = similarity_score.size();
         if (dataset_size > min_distance)
@@ -128,7 +128,7 @@ public:
                 }
                 float likelihood = salient_score < 1 ? 1 : salient_score;
                 int neighbor_left = fmax(i - 2, 0);
-                int neighbor_right = fmin((int)sim_score.size() - 1, i + 3);
+                int neighbor_right = fmin(static_cast<int>(sim_score.size()) - 1, i + 3);
                 float alpha = previous_visit_probability
                                   .segment(neighbor_left, neighbor_right - neighbor_left)
                                   .maxCoeff();

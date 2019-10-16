@@ -40,7 +40,7 @@ LoopClosureDetector::LoopClosureDetector(int feature_type, int para_table_num,
     }
     descriptor_type = feature_type;
     depth_level = input_depth_level;
-    bits_per_substring = (int)(descriptor_length / para_table_num);
+    bits_per_substring = static_cast<int>(descriptor_length / para_table_num);
     if (bits_per_substring > sizeof(size_t) * 8)
     {
         cout << "substring too large !, invalied" << endl;
@@ -53,7 +53,7 @@ LoopClosureDetector::LoopClosureDetector(int feature_type, int para_table_num,
     distance_threshold = input_distance_threshold;
 
     features_buffer = std::vector<mild_entry>(entry_num_per_hash_table * hash_table_num);
-    for (int i = 0; i < entry_num_per_hash_table * hash_table_num; i++)
+    for (int i = 0; i < static_cast<int>(entry_num_per_hash_table * hash_table_num); i++)
     {
         features_buffer[i].clear();
     }
@@ -81,47 +81,49 @@ int LoopClosureDetector::count_feature_in_database()
     return database_feature_num;
 }
 
-int LoopClosureDetector::construct_database(cv::Mat desc)
-{
+/* int LoopClosureDetector::construct_database(cv::Mat desc) */
+/* { */
 
-    int feature_num = desc.rows;
-    if (descriptor_type == FEATURE_TYPE_ORB)
-    {
-        int descriptor_length = desc.cols * 8;
-        if (descriptor_length != descriptor_length)
-        {
-            cout << "error ! feature descriptor length doesn't match" << endl;
-        }
-    }
+/*     int feature_num = desc.rows; */
+/*     if (descriptor_type == FEATURE_TYPE_ORB) */
+/*     { */
+/*         unsigned int local_descriptor_length = desc.cols * 8; */
+/*         if (descriptor_length != local_descriptor_length) */
+/*         { */
+/*             cout << "error ! feature descriptor length doesn't match" << endl; */
+/*             cout << descriptor_length << " vs " << local_descriptor_length << std::endl; */
+/*             std::exit(-1); */
+/*         } */
+/*     } */
 
-    int image_index = features_descriptor.size();
-    std::vector<unsigned long> hash_entry_index
-        = std::vector<unsigned long>(hash_table_num);
+/*     int image_index = features_descriptor.size(); */
+/*     std::vector<unsigned long> hash_entry_index */
+/*         = std::vector<unsigned long>(hash_table_num); */
 
-    database_frame df;
-    df.descriptor = desc;
-    for (int feature_idx = 0; feature_idx < feature_num; feature_idx++)
-    {
-        unsigned int* data = desc.ptr<unsigned int>(feature_idx);
-        multi_index_hashing(hash_entry_index, data, hash_table_num, bits_per_substring);
-        feature_indicator f;
-        f.image_index = image_index;
-        f.feature_index = feature_idx;
-        for (int hash_table_id = 0; hash_table_id < hash_table_num; hash_table_id++)
-        {
-            int entry_pos = hash_table_id * entry_num_per_hash_table
-                + hash_entry_index[hash_table_id];
-            if (features_buffer[entry_pos].size() == 0
-                || (features_buffer[entry_pos].size() < DEFAULT_MAX_UNIT_NUM_PER_ENTRY
-                    && features_buffer[entry_pos].back().image_index != image_index))
-            {
-                features_buffer[entry_pos].push_back(f);
-            }
-        }
-    }
-    features_descriptor.push_back(df);
-    return features_descriptor.size();
-}
+/*     database_frame df; */
+/*     df.descriptor = desc; */
+/*     for (int feature_idx = 0; feature_idx < feature_num; feature_idx++) */
+/*     { */
+/*         unsigned int* data = desc.ptr<unsigned int>(feature_idx); */
+/*         multi_index_hashing(hash_entry_index, data, hash_table_num, bits_per_substring); */
+/*         feature_indicator f; */
+/*         f.image_index = image_index; */
+/*         f.feature_index = feature_idx; */
+/*         for (int hash_table_id = 0; hash_table_id < static_cast<int>(hash_table_num); hash_table_id++) */
+/*         { */
+/*             int entry_pos = hash_table_id * entry_num_per_hash_table */
+/*                 + hash_entry_index[hash_table_id]; */
+/*             if (features_buffer[entry_pos].size() == 0 */
+/*                 || (features_buffer[entry_pos].size() < DEFAULT_MAX_UNIT_NUM_PER_ENTRY */
+/*                     && features_buffer[entry_pos].back().image_index != image_index)) */
+/*             { */
+/*                 features_buffer[entry_pos].push_back(f); */
+/*             } */
+/*         } */
+/*     } */
+/*     features_descriptor.push_back(df); */
+/*     return features_descriptor.size(); */
+/* } */
 
 int LoopClosureDetector::calculate_hamming_distance_256bit(uint64_t* f1, uint64_t* f2)
 {
@@ -141,10 +143,12 @@ int LoopClosureDetector::insert_and_query_database(
 {
     if (descriptor_type == FEATURE_TYPE_ORB)
     {
-        int descriptor_length = desc.cols * 8;
-        if (descriptor_length != descriptor_length)
+        unsigned int curr_descriptor_length = desc.cols * 8;
+        if (descriptor_length != curr_descriptor_length)
         {
             cout << "error ! feature descriptor length doesn't match" << endl;
+            cout << descriptor_length << " vs " << curr_descriptor_length << std::endl;
+            std::exit(-1);
         }
     }
     int feature_num = desc.rows;
@@ -177,7 +181,7 @@ int LoopClosureDetector::insert_and_query_database(
         feature_indicator f;
         f.image_index = image_index;
         f.feature_index = feature_idx;
-        for (int hash_table_id = 0; hash_table_id < hash_table_num; hash_table_id++)
+        for (int hash_table_id = 0; hash_table_id < static_cast<int>(hash_table_num); hash_table_id++)
         {
             int entry_pos = hash_table_id * entry_num_per_hash_table
                 + hash_entry_index[hash_table_id];
@@ -195,7 +199,7 @@ int LoopClosureDetector::insert_and_query_database(
                     neighbor_entry_idx.clear();
                     generate_neighbor_candidates(
                         depth_level, entry_idx, neighbor_entry_idx, bits_per_substring);
-                    for (int iter = 0; iter < neighbor_entry_idx.size(); iter++)
+                    for (int iter = 0; iter < static_cast<int>(neighbor_entry_idx.size()); iter++)
                     {
                         search_entry(f1, neighbor_entry_idx[iter], feature_score);
                     }
@@ -212,7 +216,7 @@ int LoopClosureDetector::insert_and_query_database(
             similar_feature_count += (feature_score[cnt] > 0);
         }
         similar_feature_count = max(1, similar_feature_count);
-        float idf_freq = (float)database_size / similar_feature_count;
+        float idf_freq = static_cast<float>(database_size) / similar_feature_count;
         idf_freq = idf_freq > 1 ? idf_freq : 1;
         idf_freq = log(idf_freq);
         for (int cnt = 0; cnt < database_size; cnt++)
@@ -226,8 +230,8 @@ int LoopClosureDetector::insert_and_query_database(
 int LoopClosureDetector::query_database(cv::Mat desc, std::vector<float>& score)
 {
     int feature_num = desc.rows;
-    int descriptor_length = desc.cols * 8;
-    int database_feature_num = count_feature_in_database();
+    /* int descriptor_length = desc.cols * 8; */
+    /* int database_feature_num = count_feature_in_database(); */
     int database_size = features_descriptor.size();
     score.clear();
     score = std::vector<float>(database_size);
@@ -245,7 +249,7 @@ int LoopClosureDetector::query_database(cv::Mat desc, std::vector<float>& score)
         unsigned int* data = desc.ptr<unsigned int>(feature_idx);
         uint64_t* f1 = desc.ptr<uint64_t>(feature_idx);
         multi_index_hashing(hash_entry_index, data, hash_table_num, bits_per_substring);
-        for (int hash_table_id = 0; hash_table_id < hash_table_num; hash_table_id++)
+        for (int hash_table_id = 0; hash_table_id <  static_cast<int>(hash_table_num); hash_table_id++)
         {
             unsigned long entry_idx = hash_table_id * entry_num_per_hash_table
                 + hash_entry_index[hash_table_id];
@@ -258,7 +262,7 @@ int LoopClosureDetector::query_database(cv::Mat desc, std::vector<float>& score)
                 std::vector<unsigned long> neighbor_entry_idx;
                 generate_neighbor_candidates(
                     depth_level, entry_idx, neighbor_entry_idx, bits_per_substring);
-                for (int iter = 0; iter < neighbor_entry_idx.size(); iter++)
+                for (int iter = 0; iter < static_cast<int>(neighbor_entry_idx.size()); iter++)
                 {
                     search_entry(f1, neighbor_entry_idx[iter], feature_score);
                 }
@@ -272,7 +276,7 @@ int LoopClosureDetector::query_database(cv::Mat desc, std::vector<float>& score)
             similar_feature_count += (feature_score[cnt] > 0);
         }
         similar_feature_count = max(1, similar_feature_count);
-        float idf_freq = (float)database_size / similar_feature_count;
+        float idf_freq = static_cast<float>(database_size) / similar_feature_count;
         idf_freq = idf_freq > 1 ? idf_freq : 1;
         idf_freq = log(idf_freq);
         for (int cnt = 0; cnt < database_size; cnt++)
@@ -291,8 +295,8 @@ void LoopClosureDetector::search_entry(
     for (int i = 0; i < conflict_num; i++)
     {
         feature_indicator& f = current_entry[i];
-        uint64_t* f2 = (uint64_t*)features_descriptor[f.image_index].descriptor.data
-            + f.feature_index * 4;
+        uint64_t* f2 = reinterpret_cast<uint64_t*>(features_descriptor[f.image_index].descriptor.data)
+                + f.feature_index * 4;
         // features_descriptor[f.image_index].descriptor.ptr<unsigned
         // __int64>(f.feature_index);
         int hamming_distance

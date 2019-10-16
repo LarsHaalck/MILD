@@ -41,8 +41,8 @@ public:
     void match(cv::Mat d1, cv::Mat d2, std::vector<cv::DMatch>& matches);
     void BFMatch(cv::Mat d1, cv::Mat d2, std::vector<cv::DMatch>& matches);
     int calculate_hamming_distance_256bit(uint64_t* f1, uint64_t* f2);
-    void search_entry(uint64_t* f1, unsigned long search_entry_idx,
-        unsigned short& min_distance, unsigned short& corr);
+    /* void search_entry(uint64_t* f1, unsigned long search_entry_idx, */
+    /*     unsigned short& min_distance, unsigned short& corr); */
     uint64_t* features_descriptor;
     std::vector<sparse_match_entry> features_buffer;
     int statistics_num_distance_calculation; // for statistic information
