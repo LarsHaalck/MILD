@@ -6,9 +6,9 @@
  *
  **/
 
-#include "loop_closure_detector.h"
+#include "MILD/loop_closure_detector.h"
 
-#include "smmintrin.h"
+#include <smmintrin.h>
 #include <iostream>
 
 using namespace std;
@@ -24,7 +24,7 @@ LoopClosureDetector::LoopClosureDetector(int feature_type, int para_table_num,
     {
     case FEATURE_TYPE_ORB:
     {
-        descriptor_length = ORB_DESCRIPTOR_LEN;
+        descriptor_length = ORB_DESCRIPTOR_LEN; // 256
         break;
     }
     case FEATURE_TYPE_BRISK:
@@ -38,7 +38,7 @@ LoopClosureDetector::LoopClosureDetector(int feature_type, int para_table_num,
         return;
     }
     }
-    descriptor_type = feature_type;
+    descriptor_type = feature_type; // not really needed
     depth_level = input_depth_level;
     bits_per_substring = static_cast<int>(descriptor_length / para_table_num);
     if (bits_per_substring > sizeof(size_t) * 8)

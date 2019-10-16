@@ -9,7 +9,7 @@
 #ifndef BAYSIAN_FILTER_H
 #define BAYSIAN_FILTER_H
 
-#include "mild.hpp"
+#include "MILD/mild.hpp"
 #include <algorithm>
 #include <eigen3/Eigen/Eigen>
 #include <vector>

@@ -53,3 +53,4 @@ build*/
 compile_commands.json
 tags
 .clangd*/
+install*/

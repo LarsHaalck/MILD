@@ -2,7 +2,6 @@
 #include <dirent.h>
 #include <fstream>
 #include <list>
-#include <omp.h>
 #include <opencv2/opencv.hpp>
 #include <sstream>
 #include <stdio.h>
@@ -13,7 +12,6 @@
 #include "MILD/BayesianFilter.hpp"
 #include "MILD/loop_closure_detector.h"
 #include "frame.h"
-#include "global.h"
 
 using namespace std;
 using namespace cv;
