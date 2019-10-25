@@ -129,6 +129,8 @@ public:
                 float likelihood = salient_score < 1 ? 1 : salient_score;
                 int neighbor_left = fmax(i - 2, 0);
                 int neighbor_right = fmin(static_cast<int>(sim_score.size()) - 1, i + 3);
+                if (neighbor_left == neighbor_right)
+                    neighbor_right += 1;
                 float alpha = previous_visit_probability
                                   .segment(neighbor_left, neighbor_right - neighbor_left)
                                   .maxCoeff();
@@ -150,8 +152,7 @@ public:
                     if (privious_visit_flag[previous_visit_idx][i] > 0)
                     {
                         int start_loop_closure = fmax(i - 4, 0);
-                        while (privious_visit_flag[previous_visit_idx][i] > 0
-                            && i < search_range)
+                        while (i < search_range && privious_visit_flag[previous_visit_idx][i] > 0)
                         {
                             i++;
                         }
