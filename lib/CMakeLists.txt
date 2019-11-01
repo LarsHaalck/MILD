@@ -28,4 +28,4 @@ install(TARGETS mild
     DESTINATION mild
 )
 
-install(DIRECTORY include DESTINATION include)
+install(DIRECTORY include/MILD DESTINATION include)
