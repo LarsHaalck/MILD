@@ -12,6 +12,8 @@ target_include_directories(mild
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 target_link_libraries(mild
+    PUBLIC
+    Eigen3::Eigen
     PRIVATE
     opencv_core
     opencv_features2d
